@@ -43,7 +43,7 @@ H2OContext.getOrCreate <- function(conf = NULL) {
   conf$set("spark.ext.h2o.rest.api.based.client", "true")
 
   sc <- spark_connection_find()[[1]]
-  jhc <- invoke_static(sc, "org.apache.spark.h2o.H2OContext", "getOrCreate", conf$jconf)
+  jhc <- invoke_static(sc, "ai.h2o.sparkling.H2OContext", "getOrCreate", conf$jconf)
   hc <- H2OContext(jhc)
   returnedConf <- invoke(jhc, "getConf")
   # Because of checks in Sparkling Water, we are sure context path starts with one slash

@@ -18,6 +18,8 @@
 package org.apache.spark.h2o.backends.internal
 
 import java.io.File
+
+import ai.h2o.sparkling.H2OContext
 import ai.h2o.sparkling.backend.api.RestAPIManager
 import ai.h2o.sparkling.backend.external.ExternalBackendConf
 import ai.h2o.sparkling.backend.utils.RestApiUtils
@@ -26,7 +28,7 @@ import ai.h2o.sparkling.utils.SparkSessionUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.spark.expose.Utils
 import org.apache.spark.h2o.backends.internal.InternalH2OBackend._
-import org.apache.spark.h2o.{H2OConf, H2OContext}
+import org.apache.spark.h2o.H2OConf
 import org.apache.spark.internal.Logging
 import org.apache.spark.rpc.RpcEndpointRef
 import org.apache.spark.scheduler.{SparkListener, SparkListenerExecutorAdded}

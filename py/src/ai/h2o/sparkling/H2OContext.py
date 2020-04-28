@@ -86,7 +86,7 @@ class H2OContext(object):
         h2o_context = H2OContext()
 
         # Create backing H2OContext
-        package = getattr(_jvm().org.apache.spark.h2o, "H2OContext$")
+        package = getattr(_jvm().ai.h2o.sparkling, "H2OContext$")
         module = package.__getattr__("MODULE$")
         jhc = module.getOrCreate(selected_conf._jconf)
         h2o_context._jhc = jhc
@@ -124,7 +124,7 @@ class H2OContext(object):
 
     def stop(self):
         h2o.connection().close()
-        scalaStopMethod = getattr(self._jhc, "org$apache$spark$h2o$H2OContext$$stop")
+        scalaStopMethod = getattr(self._jhc, "ai$h2o$sparkling$$H2OContext$$stop")
         scalaStopMethod(False, False, False) # stopSpark = False, stopJVM = False, inShutdownHook = False
 
     def downloadH2OLogs(self,  destination, container = "ZIP"):

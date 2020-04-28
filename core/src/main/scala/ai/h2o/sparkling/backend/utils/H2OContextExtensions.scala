@@ -21,11 +21,12 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
+import ai.h2o.sparkling.H2OContext
 import ai.h2o.sparkling.backend.exceptions.{H2OClusterNotReachableException, RestApiCommunicationException, RestApiException}
 import ai.h2o.sparkling.backend.external.ExternalBackendConf
 import ai.h2o.sparkling.backend.{BuildInfo, H2OJob, NodeDesc}
 import org.apache.spark.SparkContext
-import org.apache.spark.h2o.{H2OConf, H2OContext, H2OFrame}
+import org.apache.spark.h2o.{H2OConf, H2OFrame}
 import water.api.ImportHiveTableHandler.HiveTableImporter
 import water.api.schemas3.{CloudLockV3, JobV3}
 import water.fvec.Frame
