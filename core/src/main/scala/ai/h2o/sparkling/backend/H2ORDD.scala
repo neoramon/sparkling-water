@@ -19,12 +19,10 @@ package ai.h2o.sparkling.backend
 
 import java.lang.reflect.Constructor
 
-import ai.h2o.sparkling.SparkTimeZone
 import ai.h2o.sparkling.backend.converters.DataTypeConverter
 import ai.h2o.sparkling.backend.utils.ProductType
 import ai.h2o.sparkling.extensions.serde.ExpectedTypes.ExpectedType
-import ai.h2o.sparkling.{H2OFrame, SparkTimeZone}
-import org.apache.spark.h2o.H2OContext
+import ai.h2o.sparkling.{H2OContext, H2OFrame, SparkTimeZone}
 import org.apache.spark.{Partition, TaskContext}
 
 import scala.annotation.meta.{field, getter, param}
@@ -133,7 +131,8 @@ private[backend] class H2ORDD[A <: Product: TypeTag: ClassTag](val frame: H2OFra
     private lazy val convertPerColumn: Array[() => AnyRef] =
       (columnMapping zip readers) map {
         case (j, r) =>
-          () => r.apply(j).asInstanceOf[AnyRef] // this last trick converts primitives to java.lang wrappers
+          () =>
+            r.apply(j).asInstanceOf[AnyRef] // this last trick converts primitives to java.lang wrappers
       }
 
     def extractRow: Array[AnyRef] = {

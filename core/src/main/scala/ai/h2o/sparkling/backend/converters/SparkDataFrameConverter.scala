@@ -17,14 +17,12 @@
 
 package ai.h2o.sparkling.backend.converters
 
-import ai.h2o.sparkling.{H2OContext, SparkTimeZone}
+import ai.h2o.sparkling.{H2OContext, H2OFrame, SparkTimeZone}
 import ai.h2o.sparkling.backend.{H2OAwareRDD, H2OFrameRelation, Writer, WriterMetadata}
 import ai.h2o.sparkling.ml.utils.SchemaUtils._
 import ai.h2o.sparkling.utils.SparkSessionUtils
 import org.apache.spark.expose.Logging
 import org.apache.spark.sql.DataFrame
-import water.fvec.{Frame, H2OFrame}
-import water.{DKV, Key}
 
 object SparkDataFrameConverter extends Logging {
 
@@ -44,11 +42,6 @@ object SparkDataFrameConverter extends Logging {
 
   /** Transform Spark's DataFrame into H2O Frame */
   def toH2OFrame(hc: H2OContext, dataFrame: DataFrame, frameKeyName: Option[String]): H2OFrame = {
-    val key = toH2OFrameKeyString(hc, dataFrame, frameKeyName)
-    new H2OFrame(DKV.getGet[Frame](key))
-  }
-
-  def toH2OFrameKeyString(hc: H2OContext, dataFrame: DataFrame, frameKeyName: Option[String]): String = {
     val flatDataFrame = flattenDataFrame(dataFrame)
 
     val elemMaxSizes = collectMaxElementSizes(flatDataFrame)
@@ -60,7 +53,7 @@ object SparkDataFrameConverter extends Logging {
     val rdd = flatDataFrame.rdd
     val expectedTypes = DataTypeConverter.determineExpectedTypes(rdd, flatDataFrame.schema)
 
-    val uniqueFrameId = frameKeyName.getOrElse("frame_rdd_" + rdd.id + Key.rand())
+    val uniqueFrameId = frameKeyName.getOrElse("frame_rdd_" + rdd.id + scala.util.Random.nextInt())
     val metadata = WriterMetadata(hc.getConf, uniqueFrameId, expectedTypes, maxVecSizes, SparkTimeZone.current())
     Writer.convert(new H2OAwareRDD(hc.getH2ONodes(), rdd), colNames, metadata)
   }

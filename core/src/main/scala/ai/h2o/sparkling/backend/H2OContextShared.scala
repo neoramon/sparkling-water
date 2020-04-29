@@ -15,19 +15,16 @@
  * limitations under the License.
  */
 
-package ai.h2o.sparkling.backend.converters
+package ai.h2o.sparkling.backend
 
-import ai.h2o.sparkling.H2OContext
+import ai.h2o.sparkling.backend.utils.H2OContextExtensions
 import org.apache.spark.expose.Logging
-import org.apache.spark.sql.Dataset
+import org.apache.spark.h2o.H2OConf
 
-import scala.language.{implicitConversions, postfixOps}
-import scala.reflect.runtime.universe._
+private[sparkling] trait H2OContextShared extends Logging with H2OContextExtensions {
 
-object DatasetConverter extends Logging {
-
-  def toH2OFrame[T <: Product](hc: H2OContext, ds: Dataset[T], frameKeyName: Option[String])(
-      implicit ttag: TypeTag[T]) = {
-    SparkDataFrameConverter.toH2OFrame(hc, ds.toDF(), frameKeyName)
+  def connectToH2OCluster(conf: H2OConf): Array[NodeDesc] = {
+    logInfo("Connecting to H2O cluster.")
+    getAndVerifyWorkerNodes(conf)
   }
 }

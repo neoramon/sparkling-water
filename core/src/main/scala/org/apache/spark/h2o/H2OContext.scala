@@ -19,19 +19,37 @@ package org.apache.spark.h2o
 
 import java.util.concurrent.atomic.AtomicReference
 
-import ai.h2o.sparkling.backend.H2OContextImplicits
-import ai.h2o.sparkling.backend.converters.SparkDataFrameConverter
-import ai.h2o.sparkling.backend.utils.{H2OClientUtils, RestApiUtils}
+import ai.h2o.sparkling.backend.converters.{SparkDataFrameConverter, SupportedRDD, SupportedRDDConverter}
+import ai.h2o.sparkling.backend.utils.H2OClientUtils
+import ai.h2o.sparkling.backend.{H2OContextImplicits, NodeDesc}
+import ai.h2o.sparkling.utils.SparkSessionUtils
+import org.apache.spark.SparkContext
 import org.apache.spark.expose.Logging
-import org.apache.spark.sql.DataFrame
-import water.DKV
+import org.apache.spark.sql.{DataFrame, SparkSession}
 import water.api.ImportHiveTableHandler.HiveTableImporter
+import water.{DKV, Key}
 
 import scala.language.{implicitConversions, postfixOps}
-
+import scala.reflect.ClassTag
+import scala.reflect.runtime.universe._
 
 class H2OContext private (private val hc: ai.h2o.sparkling.H2OContext) {
   self =>
+
+  override def connectToH2OCluster(): Array[NodeDesc] = {
+    logInfo("Connecting to H2O cluster.")
+    val nodes = getAndVerifyWorkerNodes(conf)
+    if (H2OClientUtils.isH2OClientBased(conf)) {
+      H2OClientUtils.startH2OClient(this, conf, nodes)
+    }
+    nodes
+  }
+  val sparkSession: SparkSession = SparkSessionUtils.active
+  val sparkContext: SparkContext = sparkSession.sparkContext
+
+  def getH2ONodes(): Array[NodeDesc] = hc.getH2ONodes()
+
+  def getConf: H2OConf = hc.getConf
 
   def downloadH2OLogs(destinationDir: String, logContainer: String): String = {
     hc.downloadH2OLogs(destinationDir, logContainer)
@@ -67,6 +85,90 @@ class H2OContext private (private val hc: ai.h2o.sparkling.H2OContext) {
 
   def h2oLocalClientPort: Int = hc.h2oLocalClientPort
 
+  def asH2OFrameKeyString(rdd: SupportedRDD): String = asH2OFrameKeyString(rdd, None)
+
+  def asH2OFrameKeyString(rdd: SupportedRDD, frameName: String): String = asH2OFrameKeyString(rdd, Some(frameName))
+
+  def asH2OFrameKeyString(rdd: SupportedRDD, frameName: Option[String]): String = hc.asH2OFrame(rdd, frameName).frameId
+
+  def asH2OFrame(rdd: SupportedRDD): H2OFrame = asH2OFrame(rdd, None)
+
+  def asH2OFrame(rdd: SupportedRDD, frameName: String): H2OFrame = asH2OFrame(rdd, Option(frameName))
+
+  def asH2OFrame(rdd: SupportedRDD, frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(rdd, frameName).frameId)
+
+  def toH2OFrameKey(rdd: SupportedRDD): Key[_] = toH2OFrameKey(rdd, None)
+
+  def toH2OFrameKey(rdd: SupportedRDD, frameName: String): Key[_] = toH2OFrameKey(rdd, Option(frameName))
+
+  def toH2OFrameKey(rdd: SupportedRDD, frameName: Option[String]): Key[_] = asH2OFrame(rdd, frameName)._key
+
+  def asH2OFrame(df: DataFrame): H2OFrame = asH2OFrame(df, None)
+
+  def asH2OFrame(df: DataFrame, frameName: String): H2OFrame = asH2OFrame(df, Option(frameName))
+
+  def asH2OFrame(df: DataFrame, frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(df, frameName).frameId)
+
+  def asH2OFrameKeyString(df: DataFrame): String = asH2OFrameKeyString(df, None)
+
+  def asH2OFrameKeyString(df: DataFrame, frameName: String): String = asH2OFrameKeyString(df, Some(frameName))
+
+  def asH2OFrameKeyString(df: DataFrame, frameName: Option[String]): String = hc.asH2OFrame(df, frameName).frameId
+
+  def toH2OFrameKey(df: DataFrame): Key[Frame] = toH2OFrameKey(df, None)
+
+  def toH2OFrameKey(df: DataFrame, frameName: String): Key[Frame] = toH2OFrameKey(df, Option(frameName))
+
+  def toH2OFrameKey(df: DataFrame, frameName: Option[String]): Key[Frame] = asH2OFrame(df, frameName)._key
+
+  def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T]): H2OFrame = asH2OFrame(ds, None)
+
+  def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T], frameName: String): H2OFrame = asH2OFrame(ds, Option(frameName))
+
+  def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(ds, frameName).frameId)
+
+  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T]): Key[Frame] = toH2OFrameKey(ds, None)
+
+  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: String): Key[Frame] = toH2OFrameKey(ds, Option(frameName))
+
+  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): Key[Frame] = asH2OFrame(ds, frameName)._key
+
+  /** Create a new H2OFrame based on existing Frame referenced by its key. */
+  def asH2OFrame(s: String): H2OFrame = new H2OFrame(s)
+
+  /** Create a new H2OFrame based on existing Frame */
+  def asH2OFrame(fr: Frame): H2OFrame = new H2OFrame(fr)
+
+  /** Convert given H2O frame into a Product RDD type
+   *
+   * Consider using asH2OFrame since asRDD has several limitations such as that asRDD can't be used in Spark REPL
+   * in case we are RDD[T] where T is class defined in REPL. This is because class T is created as inner class
+   * and we are not able to create instance of class T without outer scope - which is impossible to get.
+   * */
+  def asRDD[A <: Product: TypeTag: ClassTag](fr: H2OFrame): RDD[A] = {
+    DKV.put(fr)
+    hc.asRDD(ai.h2o.sparkling.H2OFrame(fr._key.toString))
+  }
+
+  /** A generic convert of Frame into Product RDD type
+   *
+   * Consider using asH2OFrame since asRDD has several limitations such as that asRDD can't be used in Spark REPL
+   * in case we are RDD[T] where T is class defined in REPL. This is because class T is created as inner class
+   * and we are not able to create instance of class T without outer scope - which is impossible to get.
+   *
+   * This code: hc.asRDD[PUBDEV458Type](rdd) will need to be call as hc.asRDD[PUBDEV458Type].apply(rdd)
+   */
+  def asRDD[A <: Product: TypeTag: ClassTag] = new {
+    def apply[T <: Frame](fr: T): RDD[A] = {
+      DKV.put(fr)
+      hc.asRDD[A](ai.h2o.sparkling.H2OFrame(fr._key.toString))
+    }
+  }
+
+  def asRDD[A <: Product: TypeTag: ClassTag](fr: ai.h2o.sparkling.H2OFrame): org.apache.spark.rdd.RDD[A] = {
+    SupportedRDDConverter.toRDD[A](hc, fr)
+  }
+
   def asSparkFrame[T <: Frame](fr: T, copyMetadata: Boolean = true): DataFrame = {
     DKV.put(fr)
     SparkDataFrameConverter.toDataFrame(hc, ai.h2o.sparkling.H2OFrame(fr._key.toString), copyMetadata)
@@ -78,8 +180,6 @@ class H2OContext private (private val hc: ai.h2o.sparkling.H2OContext) {
   }
 
   def asSparkFrame(s: String): DataFrame = asSparkFrame(s, copyMetadata = true)
-
-
 }
 
 object H2OContext extends Logging {
