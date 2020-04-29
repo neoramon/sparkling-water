@@ -33,7 +33,7 @@ import scala.language.{implicitConversions, postfixOps}
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-class H2OContext private (private val hc: ai.h2o.sparkling.H2OContext) extends H2OContextShared {
+class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContextShared {
   self =>
 
   override protected def additionalInits(conf: H2OConf, nodes: Array[NodeDesc]): Unit = {
@@ -57,8 +57,8 @@ class H2OContext private (private val hc: ai.h2o.sparkling.H2OContext) extends H
                        database: String = HiveTableImporter.DEFAULT_DATABASE,
                        table: String,
                        partitions: Array[Array[String]] = null,
-                       allowMultiFormat: Boolean = false): Frame = {
-    hc.importHiveTable(database, table, partitions, allowMultiFormat)
+                       allowMultiFormat: Boolean = false): H2OFrame = {
+    new H2OFrame(hc.importHiveTable(database, table, partitions, allowMultiFormat).frameId)
   }
 
   object implicits extends H2OContextImplicits with Serializable {

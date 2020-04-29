@@ -91,7 +91,7 @@ object H2OClientUtils extends SharedBackendUtils {
           throw new RuntimeException("Cloud size " + discoveredSize + " under " + expectedSize);
         }
       }
-      RestAPIManager(hc).registerAll()
+      RestAPIManager(hc.hc).registerAll()
       H2O.startServingRestApi()
     }
     NodeDesc(SparkEnv.get.executorId, H2O.SELF_ADDRESS.getHostAddress, H2O.API_PORT)

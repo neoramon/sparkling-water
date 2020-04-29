@@ -127,9 +127,9 @@ class SupportedRDDConverterTestSuite extends FunSuite with SharedH2OTestContext 
   test("H2OFrame[T_NUM] to RDD[Prostate]") {
     val h2oFrame: H2OFrame = H2OFrame(new File(TestUtils.locate("smalldata/prostate/prostate.csv")))
     assert(
-      h2oFrame.vec(0).isNumeric & h2oFrame.vec(1).isNumeric & h2oFrame.vec(2).isNumeric &
-        h2oFrame.vec(3).isNumeric & h2oFrame.vec(4).isNumeric & h2oFrame.vec(5).isNumeric & h2oFrame.vec(6).isNumeric
-        & h2oFrame.vec(7).isNumeric & h2oFrame.vec(8).isNumeric)
+      h2oFrame.columns(0).isNumeric & h2oFrame.columns(1).isNumeric & h2oFrame.columns(2).isNumeric &
+        h2oFrame.columns(3).isNumeric & h2oFrame.columns(4).isNumeric & h2oFrame.columns(5).isNumeric & h2oFrame.columns(6).isNumeric
+        & h2oFrame.columns(7).isNumeric & h2oFrame.columns(8).isNumeric)
     val rdd = hc.asRDD[Prostate](h2oFrame)
 
     def @@(i: Int) = rdd.take(i + 1)(i)

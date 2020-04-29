@@ -26,7 +26,7 @@ import ai.h2o.sparkling.backend.{H2OChunk, H2OJob, NodeDesc}
 import ai.h2o.sparkling.extensions.rest.api.Paths
 import ai.h2o.sparkling.extensions.rest.api.schema.{FinalizeFrameV3, InitializeFrameV3}
 import ai.h2o.sparkling.utils.Base64Encoding
-import org.apache.spark.h2o.{H2OConf, H2OContext}
+import org.apache.spark.h2o.H2OConf
 import water.api.schemas3.FrameChunksV3.FrameChunkV3
 import water.api.schemas3.FrameV3.ColV3
 import water.api.schemas3._
@@ -86,9 +86,8 @@ class H2OFrame private (
     splitFrameV3.destination_frames.map(frameKey => H2OFrame(frameKey.name))
   }
 
-  def add(another: H2OFrame): H2OFrame = {
+  def add(another: H2OFrame): H2OFrame = ???
 
-  }
   def subframe(columns: Array[String]): H2OFrame = {
     val nonExistentColumns = columns.diff(columnNames)
     if (nonExistentColumns.nonEmpty) {
@@ -200,9 +199,8 @@ object H2OFrame extends RestCommunication {
     getFrame(conf, frameId)
   }
 
-  def apply(file: File): H2OFrame = {
+  def apply(file: File): H2OFrame = ???
 
-  }
   def listFrames(): Array[H2OFrame] = {
     val conf = H2OContext.ensure().getConf
     val endpoint = getClusterEndpoint(conf)
