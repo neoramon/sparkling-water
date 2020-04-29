@@ -112,7 +112,7 @@ class DataFramesHandlerTestSuite extends FunSuite with SharedH2OTestContext {
     import h2oContext.implicits._
     val h2oFrame = DKV.getGet[Frame](result.h2oframe_id)
 
-    assert(h2oFrame.key.toString == "requested_name", "H2OFrame ID should be equal to \"requested_name\"")
+    assert(h2oFrame.frameId.toString == "requested_name", "H2OFrame ID should be equal to \"requested_name\"")
     assert(h2oFrame.numCols() == df.columns.length, "Number of columns should match")
     assert(h2oFrame.names().sameElements(df.columns), "Column names should match")
     assert(h2oFrame.numRows() == df.count(), "Number of rows should match")

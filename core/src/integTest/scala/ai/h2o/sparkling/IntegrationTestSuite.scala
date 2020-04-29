@@ -17,7 +17,7 @@
 
 package ai.h2o.sparkling
 
-import org.apache.spark.h2o.{H2OConf, H2OContext}
+import org.apache.spark.h2o.H2OConf
 import org.apache.spark.sql.SparkSession
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -40,14 +40,14 @@ class IntegrationTestSuite extends FunSuite with SharedH2OTestContext {
   test("Convert H2OFrame to DataFrame when H2OFrame was changed in DKV in distributed environment") {
     val rdd = sc.parallelize(1 to 100, 2)
     val h2oFrame = hc.asH2OFrame(rdd)
-    assert(h2oFrame.anyVec().nChunks() == 2)
+    assert(h2oFrame.chunks.length == 2)
     val updatedFrame = h2oFrame.add(h2oFrame)
 
     val convertedDf = hc.asSparkFrame(updatedFrame)
     convertedDf.collect()
 
-    assert(convertedDf.count() == h2oFrame.numRows())
-    assert(convertedDf.columns.length == h2oFrame.names().length)
+    assert(convertedDf.count() == h2oFrame.numberOfRows)
+    assert(convertedDf.columns.length == h2oFrame.columnNames.length)
   }
 
   test("H2OFrame High Availability: Task killed but frame still converted successfully") {

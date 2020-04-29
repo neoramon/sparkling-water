@@ -17,14 +17,13 @@
 
 package ai.h2o.sparkling.backend
 
-import ai.h2o.sparkling.backend.utils.H2OContextExtensions
 import org.apache.spark.expose.Logging
 import org.apache.spark.h2o.H2OConf
 
-private[sparkling] trait H2OContextShared extends Logging with H2OContextExtensions {
+/**
+ * Remove when the client is removed from Sparkling Water codebase
+ */
+trait H2OContextShared extends Logging{
 
-  def connectToH2OCluster(conf: H2OConf): Array[NodeDesc] = {
-    logInfo("Connecting to H2O cluster.")
-    getAndVerifyWorkerNodes(conf)
-  }
+  protected def additionalInits(conf: H2OConf, nodes: Array[NodeDesc]): Unit = {}
 }

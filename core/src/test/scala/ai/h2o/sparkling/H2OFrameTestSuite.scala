@@ -30,7 +30,7 @@ class H2OFrameTestSuite extends FunSuite with SharedH2OTestContext {
   private def uploadH2OFrame(): H2OFrame = {
     // since we did not ask Spark to infer schema, all columns have been parsed as Strings
     val df = spark.read.option("header", "true").csv(TestUtils.locate("smalldata/prostate/prostate.csv"))
-    H2OFrame(hc.asH2OFrameKeyString(df))
+    hc.asH2OFrame(df)
   }
 
   test("convertColumnsToCategorical with column names") {
@@ -107,16 +107,23 @@ class H2OFrameTestSuite extends FunSuite with SharedH2OTestContext {
     assert(subframe.frameId != originalFrame.frameId)
   }
 
+  test("delete") {
+    val originalFrame = uploadH2OFrame()
+    originalFrame.delete()
+    val frames = H2OFrame.listFrames()
+    assert(!frames.map(_.frameId).contains(originalFrame.frameId))
+  }
+
   private lazy val leftFrame = {
     val leftDf = sc
       .parallelize(Seq(("A", 12, "NYC"), ("B", 13, "SF"), ("C", 14, "PRG"), ("D", 15, "SYD")))
       .toDF("name", "age", "city")
-    H2OFrame(hc.asH2OFrameKeyString(leftDf)).convertColumnsToCategorical(Array("name"))
+    hc.asH2OFrame(leftDf).convertColumnsToCategorical(Array("name"))
   }
 
   private lazy val rightFrame = {
     val rightDf = sc.parallelize(Seq(("Y", 10000), ("B", 20000), ("X", 30000), ("D", 40000))).toDF("name", "salary")
-    H2OFrame(hc.asH2OFrameKeyString(rightDf)).convertColumnsToCategorical(Array("name"))
+    hc.asH2OFrame(rightDf).convertColumnsToCategorical(Array("name"))
   }
 
   test("Left join") {

@@ -76,6 +76,27 @@ trait RestCommunication extends Logging with RestEncodingUtils {
   }
 
   /**
+   *
+   * @param endpoint      An address of H2O node with exposed REST endpoint
+   * @param suffix        REST relative path representing a specific call
+   * @param conf          H2O conf object
+   * @param params        Query parameters
+   * @param skippedFields The list of field specifications that are skipped during deserialization. The specification
+   *                      consists of the class containing the field and the field name.
+   * @tparam ResultType A type that the result will be deserialized to
+   * @return A deserialized object
+   */
+  def delete[ResultType: ClassTag](
+                                    endpoint: URI,
+                                    suffix: String,
+                                    conf: H2OConf,
+                                    params: Map[String, Any] = Map.empty,
+                                    skippedFields: Seq[(Class[_], String)] = Seq.empty,
+                                    encodeParamsAsJson: Boolean = false): ResultType = {
+    request(endpoint, "DELETE", suffix, conf, params, skippedFields, encodeParamsAsJson)
+  }
+
+  /**
     *
     * @param node   H2O node descriptor
     * @param suffix REST relative path representing a specific call

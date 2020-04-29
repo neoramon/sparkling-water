@@ -105,6 +105,11 @@ class H2OFrame private (
   }
 
   /**
+   * Delete this H2O Frame from the cluster
+   */
+  def delete(): Unit = H2OFrame.deleteFrame(conf, frameId)
+
+  /**
     * Left join this frame with another frame
     *
     * @param another right frame
@@ -152,7 +157,7 @@ class H2OFrame private (
     val anotherFrame = hc.asSparkFrame(another.frameId)
     val sameCols = anotherFrame.columns.intersect(currentFrame.columns)
     val joined = currentFrame.join(anotherFrame, sameCols, method)
-    H2OFrame(hc.asH2OFrameKeyString(joined))
+    hc.asH2OFrame(joined)
   }
 
   /**
@@ -191,6 +196,13 @@ object H2OFrame extends RestCommunication {
     getFrame(conf, frameId)
   }
 
+  def listFrames(): Array[H2OFrame] = {
+    val conf = H2OContext.ensure().getConf
+    val endpoint = getClusterEndpoint(conf)
+    val frames = query[FramesListV3](endpoint, "/3/Frames/", conf)
+    frames.frames.map(fr => H2OFrame(fr.frame_id.name))
+  }
+
   private def getFrame(conf: H2OConf, frameId: String): H2OFrame = {
     val endpoint = getClusterEndpoint(conf)
     val frames = query[FramesV3](
@@ -207,6 +219,11 @@ object H2OFrame extends RestCommunication {
       frame.frame_id.name,
       frame.columns.map(convertColumn),
       frameChunks.chunks.map(convertChunk(_, clusterNodes)))
+  }
+
+  private def deleteFrame(conf: H2OConf, frameId: String): Unit = {
+    val endpoint = getClusterEndpoint(conf)
+    delete[FramesV3](endpoint, s"3/Frames/$frameId", conf)
   }
 
   private def convertColumn(sourceColumn: ColV3): H2OColumn = {

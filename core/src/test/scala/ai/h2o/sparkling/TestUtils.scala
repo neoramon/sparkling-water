@@ -20,14 +20,13 @@ import java.io.File
 import java.sql.Timestamp
 import java.util.UUID
 
-import org.apache.spark.h2o.Dataset
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.catalyst.encoders.{ExpressionEncoder, RowEncoder}
 import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema
 import org.apache.spark.sql.functions.{lit, rand}
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.{h2o, mllib}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SparkSession}
+import org.apache.spark.mllib
 import org.scalatest.Matchers
 import water.fvec.{Chunk, ChunkUtils, NewChunk, Vec}
 import water.parser.BufferedString
@@ -91,13 +90,13 @@ object TestUtils extends Matchers {
       chunkLayout: Array[Long],
       data: Array[Array[T]],
       h2oType: Byte,
-      colDomains: Array[Array[String]] = null): h2o.H2OFrame = {
+      colDomains: Array[Array[String]] = null): H2OFrame = {
     ChunkUtils.initFrame(fname, colNames)
     val d = data.map(_.map(value => Array(value)))
     for (i <- chunkLayout.indices) {
       buildChunks(fname, d(i), i, Array(h2oType))
     }
-    new h2o.H2OFrame(ChunkUtils.finalizeFrame(fname, chunkLayout, Array(h2oType), colDomains))
+    new H2OFrame(ChunkUtils.finalizeFrame(fname, chunkLayout, Array(h2oType), colDomains))
   }
 
   def assertFieldNamesAreEqual(expected: DataFrame, produced: DataFrame): Unit = {
@@ -134,24 +133,24 @@ object TestUtils extends Matchers {
        """.stripMargin)
   }
 
-  def assertBasicInvariants[T <: Product](rdd: RDD[T], df: h2o.H2OFrame, rowAssert: RowValueAssert): Unit = {
+  def assertBasicInvariants[T <: Product](rdd: RDD[T], df: H2OFrame, rowAssert: RowValueAssert): Unit = {
     assertRDDHolderProperties(df)
-    assert(rdd.count == df.numRows(), "Number of rows in H2OFrame and RDD should match")
+    assert(rdd.count == df.numberOfRows, "Number of rows in H2OFrame and RDD should match")
     val vec = df.vec(0)
     var rowIdx = 0
-    while (rowIdx < df.numRows()) {
+    while (rowIdx < df.numberOfRows) {
       assert(!vec.isNA(rowIdx), "The H2OFrame should not contain any NA values")
       rowAssert(rowIdx, vec)
       rowIdx += 1
     }
   }
 
-  def assertInvariantsWithNulls[T <: Product](rdd: RDD[T], df: h2o.H2OFrame, rowAssert: RowValueAssert): Unit = {
+  def assertInvariantsWithNulls[T <: Product](rdd: RDD[T], df: H2OFrame, rowAssert: RowValueAssert): Unit = {
     assertRDDHolderProperties(df)
-    assert(rdd.count == df.numRows(), "Number of rows in H2OFrame and RDD should match")
+    assert(rdd.count == df.numberOfRows, "Number of rows in H2OFrame and RDD should match")
     val vec = df.vec(0)
     var rowIdx = 0
-    while (rowIdx < df.numRows()) {
+    while (rowIdx < df.numberOfRows) {
       rowAssert(rowIdx, vec)
       rowIdx += 1
     }
@@ -159,16 +158,16 @@ object TestUtils extends Matchers {
 
   def assertBasicInvariants[T <: Product](
       ds: Dataset[T],
-      df: h2o.H2OFrame,
+      df: H2OFrame,
       rowAssert: RowValueAssert,
       names: List[String]): Unit = {
     assertDatasetHolderProperties(df, names)
     assert(
-      ds.count == df.numRows(),
-      s"Number of rows in H2OFrame (${df.numRows()}) and Dataset (${ds.count}) should match")
+      ds.count == df.numberOfRows,
+      s"Number of rows in H2OFrame (${df.numberOfRows}) and Dataset (${ds.count}) should match")
 
     val vec = df.vec(0)
-    for (row <- Range(0, df.numRows().toInt)) {
+    for (row <- Range(0, df.numberOfRows.toInt)) {
       rowAssert(row, vec)
     }
   }
@@ -346,19 +345,19 @@ object TestUtils extends Matchers {
 
   private type RowValueAssert = (Long, Vec) => Unit
 
-  private def assertRDDHolderProperties(df: h2o.H2OFrame): Unit = {
-    assert(df.numCols() == 1, "H2OFrame should contain single column")
-    assert(df.names().length == 1, "H2OFrame column names should have single value")
+  private def assertRDDHolderProperties(df: H2OFrame): Unit = {
+    assert(df.numberOfColumns == 1, "H2OFrame should contain single column")
+    assert(df.columnNames.length == 1, "H2OFrame column names should have single value")
     assert(
-      df.names()(0).equals("value"),
+      df.columnNames.head.equals("value"),
       "H2OFrame column name should be 'value' since we define the value inside the Option.")
   }
 
-  private def assertDatasetHolderProperties(df: h2o.H2OFrame, names: List[String]): Unit = {
-    val actualNames = df.names().toList
+  private def assertDatasetHolderProperties(df: H2OFrame, names: List[String]): Unit = {
+    val actualNames = df.columnNames.toList
     val numCols = names.length
-    assert(df.numCols() == numCols, s"H2OFrame should contain $numCols column(s), have ${df.numCols()}")
-    assert(df.names().length == numCols, s"H2OFrame column names should be $numCols in size, have ${df.names().length}")
+    assert(df.numberOfColumns == numCols, s"H2OFrame should contain $numCols column(s), have ${df.numberOfColumns}")
+    assert(df.columnNames.length == numCols, s"H2OFrame column names should be $numCols in size, have ${df.columnNames.length}")
     assert(
       actualNames.equals(names),
       s"H2OFrame column names should be $names since Holder object was used to define Dataset, but it is $actualNames")

@@ -30,4 +30,8 @@ case class H2OColumn(
     domain: Array[String],
     domainCardinality: Long) {
   def nullable: Boolean = numberOfMissingElements > 0
+
+  def isString(): Boolean = dataType == H2OColumnType.string
+
+  def isNumeric(): Boolean = dataType == H2OColumnType.real || dataType == H2OColumnType.int
 }
