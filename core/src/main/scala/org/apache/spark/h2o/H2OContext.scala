@@ -54,10 +54,10 @@ class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContex
   }
 
   def importHiveTable(
-                       database: String = HiveTableImporter.DEFAULT_DATABASE,
-                       table: String,
-                       partitions: Array[Array[String]] = null,
-                       allowMultiFormat: Boolean = false): H2OFrame = {
+      database: String = HiveTableImporter.DEFAULT_DATABASE,
+      table: String,
+      partitions: Array[Array[String]] = null,
+      allowMultiFormat: Boolean = false): H2OFrame = {
     new H2OFrame(hc.importHiveTable(database, table, partitions, allowMultiFormat).frameId)
   }
 
@@ -93,7 +93,8 @@ class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContex
 
   def asH2OFrame(rdd: SupportedRDD, frameName: String): H2OFrame = asH2OFrame(rdd, Option(frameName))
 
-  def asH2OFrame(rdd: SupportedRDD, frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(rdd, frameName).frameId)
+  def asH2OFrame(rdd: SupportedRDD, frameName: Option[String]): H2OFrame =
+    new H2OFrame(hc.asH2OFrame(rdd, frameName).frameId)
 
   def toH2OFrameKey(rdd: SupportedRDD): Key[_] = toH2OFrameKey(rdd, None)
 
@@ -105,7 +106,8 @@ class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContex
 
   def asH2OFrame(df: DataFrame, frameName: String): H2OFrame = asH2OFrame(df, Option(frameName))
 
-  def asH2OFrame(df: DataFrame, frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(df, frameName).frameId)
+  def asH2OFrame(df: DataFrame, frameName: Option[String]): H2OFrame =
+    new H2OFrame(hc.asH2OFrame(df, frameName).frameId)
 
   def asH2OFrameKeyString(df: DataFrame): String = asH2OFrameKeyString(df, None)
 
@@ -123,39 +125,26 @@ class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContex
 
   def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T], frameName: String): H2OFrame = asH2OFrame(ds, Option(frameName))
 
-  def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): H2OFrame = new H2OFrame(hc.asH2OFrame(ds, frameName).frameId)
+  def asH2OFrame[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): H2OFrame =
+    new H2OFrame(hc.asH2OFrame(ds, frameName).frameId)
 
   def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T]): Key[Frame] = toH2OFrameKey(ds, None)
 
-  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: String): Key[Frame] = toH2OFrameKey(ds, Option(frameName))
+  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: String): Key[Frame] =
+    toH2OFrameKey(ds, Option(frameName))
 
-  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): Key[Frame] = asH2OFrame(ds, frameName)._key
+  def toH2OFrameKey[T <: Product: TypeTag](ds: Dataset[T], frameName: Option[String]): Key[Frame] =
+    asH2OFrame(ds, frameName)._key
 
-  /** Create a new H2OFrame based on existing Frame referenced by its key. */
   def asH2OFrame(s: String): H2OFrame = new H2OFrame(s)
 
-  /** Create a new H2OFrame based on existing Frame */
   def asH2OFrame(fr: Frame): H2OFrame = new H2OFrame(fr)
 
-  /** Convert given H2O frame into a Product RDD type
-   *
-   * Consider using asH2OFrame since asRDD has several limitations such as that asRDD can't be used in Spark REPL
-   * in case we are RDD[T] where T is class defined in REPL. This is because class T is created as inner class
-   * and we are not able to create instance of class T without outer scope - which is impossible to get.
-   * */
   def asRDD[A <: Product: TypeTag: ClassTag](fr: H2OFrame): RDD[A] = {
     DKV.put(fr)
     hc.asRDD(ai.h2o.sparkling.H2OFrame(fr._key.toString))
   }
 
-  /** A generic convert of Frame into Product RDD type
-   *
-   * Consider using asH2OFrame since asRDD has several limitations such as that asRDD can't be used in Spark REPL
-   * in case we are RDD[T] where T is class defined in REPL. This is because class T is created as inner class
-   * and we are not able to create instance of class T without outer scope - which is impossible to get.
-   *
-   * This code: hc.asRDD[PUBDEV458Type](rdd) will need to be call as hc.asRDD[PUBDEV458Type].apply(rdd)
-   */
   def asRDD[A <: Product: TypeTag: ClassTag] = new {
     def apply[T <: Frame](fr: T): RDD[A] = {
       DKV.put(fr)

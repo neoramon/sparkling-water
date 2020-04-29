@@ -131,8 +131,7 @@ private[backend] class H2ORDD[A <: Product: TypeTag: ClassTag](val frame: H2OFra
     private lazy val convertPerColumn: Array[() => AnyRef] =
       (columnMapping zip readers) map {
         case (j, r) =>
-          () =>
-            r.apply(j).asInstanceOf[AnyRef] // this last trick converts primitives to java.lang wrappers
+          () => r.apply(j).asInstanceOf[AnyRef] // this last trick converts primitives to java.lang wrappers
       }
 
     def extractRow: Array[AnyRef] = {

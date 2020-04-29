@@ -18,6 +18,7 @@
 package ai.h2o.sparkling
 
 import java.io.File
+import java.net.URI
 import java.text.MessageFormat
 
 import ai.h2o.sparkling.backend.utils.RestApiUtils._
@@ -108,8 +109,8 @@ class H2OFrame private (
   }
 
   /**
-   * Delete this H2O Frame from the cluster
-   */
+    * Delete this H2O Frame from the cluster
+    */
   def delete(): Unit = H2OFrame.deleteFrame(conf, frameId)
 
   /**
@@ -200,6 +201,8 @@ object H2OFrame extends RestCommunication {
   }
 
   def apply(file: File): H2OFrame = ???
+
+  def apply(uri: URI): H2OFrame = ???
 
   def listFrames(): Array[H2OFrame] = {
     val conf = H2OContext.ensure().getConf

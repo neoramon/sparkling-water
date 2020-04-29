@@ -357,7 +357,9 @@ object TestUtils extends Matchers {
     val actualNames = df.columnNames.toList
     val numCols = names.length
     assert(df.numberOfColumns == numCols, s"H2OFrame should contain $numCols column(s), have ${df.numberOfColumns}")
-    assert(df.columnNames.length == numCols, s"H2OFrame column names should be $numCols in size, have ${df.columnNames.length}")
+    assert(
+      df.columnNames.length == numCols,
+      s"H2OFrame column names should be $numCols in size, have ${df.columnNames.length}")
     assert(
       actualNames.equals(names),
       s"H2OFrame column names should be $names since Holder object was used to define Dataset, but it is $actualNames")

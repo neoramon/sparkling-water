@@ -21,9 +21,9 @@ import org.apache.spark.expose.Logging
 import org.apache.spark.h2o.H2OConf
 
 /**
- * Remove when the client is removed from Sparkling Water codebase
- */
-trait H2OContextShared extends Logging{
+  * Remove when the client is removed from Sparkling Water codebase
+  */
+trait H2OContextShared extends Logging {
 
   protected def additionalInits(conf: H2OConf, nodes: Array[NodeDesc]): Unit = {}
 }

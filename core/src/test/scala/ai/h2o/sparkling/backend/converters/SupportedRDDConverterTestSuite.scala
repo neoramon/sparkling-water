@@ -128,7 +128,9 @@ class SupportedRDDConverterTestSuite extends FunSuite with SharedH2OTestContext 
     val h2oFrame: H2OFrame = H2OFrame(new File(TestUtils.locate("smalldata/prostate/prostate.csv")))
     assert(
       h2oFrame.columns(0).isNumeric & h2oFrame.columns(1).isNumeric & h2oFrame.columns(2).isNumeric &
-        h2oFrame.columns(3).isNumeric & h2oFrame.columns(4).isNumeric & h2oFrame.columns(5).isNumeric & h2oFrame.columns(6).isNumeric
+        h2oFrame.columns(3).isNumeric & h2oFrame.columns(4).isNumeric & h2oFrame.columns(5).isNumeric & h2oFrame
+        .columns(6)
+        .isNumeric
         & h2oFrame.columns(7).isNumeric & h2oFrame.columns(8).isNumeric)
     val rdd = hc.asRDD[Prostate](h2oFrame)
 
@@ -552,15 +554,25 @@ class SupportedRDDConverterTestSuite extends FunSuite with SharedH2OTestContext 
     assert(inputRDD.count == df.numberOfRows, "Number of rows has to match")
     inputRDD match {
       case x if x.take(1)(0).isInstanceOf[ByteField] =>
-        assert(df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[ByteField].productArity, "Number columns should match")
+        assert(
+          df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[ByteField].productArity,
+          "Number columns should match")
       case x if x.take(1)(0).isInstanceOf[ShortField] =>
-        assert(df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[ShortField].productArity, "Number columns should match")
+        assert(
+          df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[ShortField].productArity,
+          "Number columns should match")
       case x if x.take(1)(0).isInstanceOf[LongField] =>
-        assert(df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[LongField].productArity, "Number columns should match")
+        assert(
+          df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[LongField].productArity,
+          "Number columns should match")
       case x if x.take(1)(0).isInstanceOf[IntField] =>
-        assert(df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[IntField].productArity, "Number columns should match")
+        assert(
+          df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[IntField].productArity,
+          "Number columns should match")
       case x if x.take(1)(0).isInstanceOf[FloatField] =>
-        assert(df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[FloatField].productArity, "Number columns should match")
+        assert(
+          df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[FloatField].productArity,
+          "Number columns should match")
       case x if x.take(1)(0).isInstanceOf[DoubleField] =>
         assert(
           df.numberOfColumns == inputRDD.take(1)(0).asInstanceOf[DoubleField].productArity,

@@ -75,8 +75,9 @@ class DefaultSource
       data: DataFrame): BaseRelation = {
     val key = checkKey(parameters)
     val originalFrame = DKV.getGet[Frame](key)
-    implicit val h2oContext: H2OContext =
-      H2OContext.ensure("H2OContext has to be started in order to save/load data using H2O Data source.")
+    implicit val h2oContext: ai.h2o.sparkling.H2OContext =
+      ai.h2o.sparkling.H2OContext
+        .ensure("H2OContext has to be started in order to save/load data using H2O Data source.")
 
     if (originalFrame != null) {
       mode match {
