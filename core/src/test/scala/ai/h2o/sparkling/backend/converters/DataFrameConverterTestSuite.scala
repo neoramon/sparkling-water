@@ -24,7 +24,7 @@ import java.util.{TimeZone, UUID}
 
 import ai.h2o.sparkling.TestUtils._
 import ai.h2o.sparkling.ml.utils.SchemaUtils
-import ai.h2o.sparkling.{SharedH2OTestContext, TestUtils}
+import ai.h2o.sparkling.{H2OFrame, SharedH2OTestContext, TestUtils}
 import hex.splitframe.ShuffleSplitFrame
 import org.apache.spark.ml.linalg.SQLDataTypes.VectorType
 import org.apache.spark.mllib.linalg.Vectors
@@ -35,7 +35,6 @@ import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{Assertions, FunSuite}
 import water.Key
-import water.fvec._
 import water.parser.BufferedString
 
 @RunWith(classOf[JUnitRunner])
@@ -45,12 +44,12 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
   import spark.implicits._
 
   test("Creation of H2ODataFrame") {
-    val h2oFrame = new H2OFrame(new File(TestUtils.locate("smalldata/prostate/prostate.csv")))
+    val h2oFrame = H2OFrame(new File(TestUtils.locate("smalldata/prostate/prostate.csv")))
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
     assert(
-      h2oFrame.numRows() == dataFrame.count(),
+      h2oFrame.numberOfRows == dataFrame.count(),
       "Number of lines in H2O Frame and in Spark DataFrame has to be same")
     h2oFrame.delete()
   }
@@ -60,8 +59,8 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     val empty = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
     val fr = hc.asH2OFrame(empty)
 
-    assert(fr.numCols() == 0)
-    assert(fr.numRows() == 0)
+    assert(fr.numberOfColumns == 0)
+    assert(fr.numberOfRows == 0)
   }
 
   test("Convert Empty dataframe, non-empty schema") {
@@ -69,8 +68,8 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     val empty = spark.createDataFrame(spark.sparkContext.emptyRDD[Row], schema)
     val fr = hc.asH2OFrame(empty)
 
-    assert(fr.numCols() == 2)
-    assert(fr.numRows() == 0)
+    assert(fr.numberOfColumns == 2)
+    assert(fr.numberOfRows == 0)
   }
 
   // H2OFrame to DataFrame[T] JUnits
@@ -86,7 +85,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(4)(3)(0) == "ONE")
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", StringType, false, _) => true
@@ -108,7 +107,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     val localtime = DateTimeUtils.toUTCTime(1428517566L * 1000, TimeZone.getDefault.getID) / 1000
     assert(dataFrame.take(4)(3)(0).asInstanceOf[Timestamp].getTime == localtime)
     assert(dataFrame.schema.fields(0) match {
@@ -131,7 +130,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(8)(7)(0) == 8)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", ByteType, false, _) => true
@@ -154,7 +153,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(8)(7)(0) == 208)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", ShortType, false, _) => true
@@ -177,7 +176,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(8)(7)(0) == 100008)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", IntegerType, false, _) => true
@@ -199,7 +198,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(4)(3)(0) == -8589934595L)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", LongType, false, _) => true
@@ -221,7 +220,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(4)(3)(0) == 100.00012)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", DoubleType, false, _) => true
@@ -244,7 +243,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.take(8)(7)(0) == "string8")
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", StringType, false, _) => true
@@ -278,7 +277,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val dataFrame = hc.asSparkFrame(h2oFrame)
 
-    assert(dataFrame.count == h2oFrame.numRows())
+    assert(dataFrame.count == h2oFrame.numberOfRows)
     assert(dataFrame.schema.fields(0) match {
       case StructField("C0", StringType, false, _) => true
       case _ => false
@@ -523,7 +522,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into dataframe
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(5 == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 
@@ -551,9 +550,9 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into DataFrame
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
-    assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
-    assert(h2oFrame.names() === expandedSchema.map(_.name))
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
+    assert(expandedSchema.length == h2oFrame.numberOfColumns, "Number columns should match")
+    assert(h2oFrame.columnNames === expandedSchema.map(_.name))
 
     // Verify data stored in h2oFrame after transformation
     assertDoubleFrameValues(h2oFrame, values.map(pojo => util.Arrays.copyOf(pojo.f.toArray, num)))
@@ -576,7 +575,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into DataFrame
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 
@@ -601,7 +600,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into DataFrame
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 
@@ -622,7 +621,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into DataFrame
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 
@@ -651,7 +650,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     // Verify transformation into DataFrame
     val h2oFrame = hc.asH2OFrame(df)
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 
@@ -689,7 +688,7 @@ class DataFrameConverterTestSuite extends FunSuite with SharedH2OTestContext {
     val h2oFrame = hc.asH2OFrame(df)
 
     // Basic invariants
-    assert(df.count == h2oFrame.numRows(), "Number of rows has to match")
+    assert(df.count == h2oFrame.numberOfRows, "Number of rows has to match")
     assert(expandedSchema.length == h2oFrame.numCols(), "Number columns should match")
     assert(h2oFrame.names() === expandedSchema.map(_.name))
 

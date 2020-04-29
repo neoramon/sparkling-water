@@ -17,9 +17,9 @@
 
 package ai.h2o.sparkling.backend.converters
 
-import ai.h2o.sparkling.SharedH2OTestContext
+import ai.h2o.sparkling.{H2OFrame, SharedH2OTestContext}
 import ai.h2o.sparkling.TestUtils._
-import org.apache.spark.h2o._
+import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
 import org.junit.runner.RunWith
 import org.scalatest.FunSuite
@@ -86,7 +86,7 @@ class DatasetConverterTestSuite extends FunSuite with SharedH2OTestContext {
 
     val extracted = readWholeFrame[SamplePerson](testH2oFrame)
 
-    assert(testSourceDataset.count == testH2oFrame.numRows(), "Number of rows should match")
+    assert(testSourceDataset.count == testH2oFrame.numberOfRows, "Number of rows should match")
 
     matchData(extracted, samplePeople)
   }
@@ -124,7 +124,7 @@ class DatasetConverterTestSuite extends FunSuite with SharedH2OTestContext {
     val extracted = readWholeFrame[PartialPerson](testH2oFrameWithPartialData)
 
     assert(
-      testSourceDatasetWithPartialData.count == testH2oFrameWithPartialData.numRows(),
+      testSourceDatasetWithPartialData.count == testH2oFrameWithPartialData.numberOfRows,
       "Number of rows should match")
 
     matchData(extracted, samplePartialPeople)

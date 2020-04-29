@@ -17,6 +17,7 @@
 
 package ai.h2o.sparkling
 
+import java.io.File
 import java.text.MessageFormat
 
 import ai.h2o.sparkling.backend.utils.RestApiUtils._
@@ -85,6 +86,9 @@ class H2OFrame private (
     splitFrameV3.destination_frames.map(frameKey => H2OFrame(frameKey.name))
   }
 
+  def add(another: H2OFrame): H2OFrame = {
+
+  }
   def subframe(columns: Array[String]): H2OFrame = {
     val nonExistentColumns = columns.diff(columnNames)
     if (nonExistentColumns.nonEmpty) {
@@ -196,12 +200,17 @@ object H2OFrame extends RestCommunication {
     getFrame(conf, frameId)
   }
 
+  def apply(file: File): H2OFrame = {
+
+  }
   def listFrames(): Array[H2OFrame] = {
     val conf = H2OContext.ensure().getConf
     val endpoint = getClusterEndpoint(conf)
     val frames = query[FramesListV3](endpoint, "/3/Frames/", conf)
     frames.frames.map(fr => H2OFrame(fr.frame_id.name))
   }
+
+  def exists(frameId: String): Boolean = listFrames().map(_.frameId).contains(frameId)
 
   private def getFrame(conf: H2OConf, frameId: String): H2OFrame = {
     val endpoint = getClusterEndpoint(conf)
