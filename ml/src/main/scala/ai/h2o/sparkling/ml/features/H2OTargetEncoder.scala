@@ -56,7 +56,7 @@ class H2OTargetEncoder(override val uid: String)
       "response_column" -> getLabelCol(),
       "fold_column" -> getFoldCol(),
       "ignored_columns" -> ignoredColumns,
-      "training_frame" -> input)
+      "training_frame" -> input.frameId)
     val targetEncoderModelId = trainAndGetDestinationKey(s"/3/ModelBuilders/targetencoder", params)
     val model = new H2OTargetEncoderModel(uid, H2OModel(targetEncoderModelId)).setParent(this)
     copyValues(model)

@@ -68,7 +68,7 @@ class H2OTargetEncoderModel(override val uid: String, targetEncoderModel: H2OMod
     val endpoint = RestApiUtils.getClusterEndpoint(conf)
     val params = Map(
       "model" -> targetEncoderModel.modelId,
-      "frame" -> input,
+      "frame" -> input.frameId,
       "data_leakage_handling" -> getHoldoutStrategy(),
       "noise" -> getNoise(),
       "blending" -> getBlendedAvgEnabled(),
