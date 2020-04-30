@@ -202,9 +202,9 @@ class H2OContext(object):
 
         df = H2OContext.__prepareSparkDataForConversion(sparkFrame)
         if h2oFrameName is None:
-            key = self._jhc.asH2OFrameKeyString(df._jdf)
+            key = self._jhc.asH2OFrame(df._jdf).frameId
         else:
-            key = self._jhc.asH2OFrameKeyString(df._jdf, h2oFrameName)
+            key = self._jhc.asH2OFrame(df._jdf, h2oFrameName).frameId
         return H2OFrame.get_frame(key, full_cols=fullCols, light=True)
 
     @staticmethod

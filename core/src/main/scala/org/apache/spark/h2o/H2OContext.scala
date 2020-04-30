@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 import ai.h2o.sparkling.backend.converters.{SparkDataFrameConverter, SupportedRDD, SupportedRDDConverter}
 import ai.h2o.sparkling.backend.utils.H2OClientUtils
-import ai.h2o.sparkling.backend.{H2OContextShared, NodeDesc}
+import ai.h2o.sparkling.backend.NodeDesc
 import ai.h2o.sparkling.utils.SparkSessionUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.expose.Logging
@@ -33,14 +33,8 @@ import scala.language.{implicitConversions, postfixOps}
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe._
 
-class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) extends H2OContextShared {
+class H2OContext private (val hc: ai.h2o.sparkling.H2OContext) {
   self =>
-
-  override protected def additionalInits(conf: H2OConf, nodes: Array[NodeDesc]): Unit = {
-    if (H2OClientUtils.isH2OClientBased(conf)) {
-      H2OClientUtils.startH2OClient(this, conf, nodes)
-    }
-  }
 
   val sparkSession: SparkSession = SparkSessionUtils.active
   val sparkContext: SparkContext = sparkSession.sparkContext

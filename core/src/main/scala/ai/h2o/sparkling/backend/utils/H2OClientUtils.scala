@@ -19,10 +19,11 @@ package ai.h2o.sparkling.backend.utils
 
 import java.net.{InetAddress, NetworkInterface}
 
+import ai.h2o.sparkling.H2OContext
 import ai.h2o.sparkling.backend.NodeDesc
 import ai.h2o.sparkling.backend.api.RestAPIManager
 import org.apache.spark.SparkEnv
-import org.apache.spark.h2o.{H2OConf, H2OContext}
+import org.apache.spark.h2o.H2OConf
 import water.fvec.Frame
 import water.init.HostnameGuesser
 import water.{H2O, H2OStarter, Paxos}
@@ -91,7 +92,7 @@ object H2OClientUtils extends SharedBackendUtils {
           throw new RuntimeException("Cloud size " + discoveredSize + " under " + expectedSize);
         }
       }
-      RestAPIManager(hc.hc).registerAll()
+      RestAPIManager(hc).registerAll()
       H2O.startServingRestApi()
     }
     NodeDesc(SparkEnv.get.executorId, H2O.SELF_ADDRESS.getHostAddress, H2O.API_PORT)

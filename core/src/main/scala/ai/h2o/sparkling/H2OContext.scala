@@ -62,7 +62,7 @@ import scala.reflect.runtime.universe._
   *
   * @param conf H2O configuration
   */
-class H2OContext private[sparkling] (private val conf: H2OConf) extends H2OContextExtensions with H2OContextShared {
+class H2OContext private[sparkling] (private val conf: H2OConf) extends H2OContextExtensions {
   self =>
   val sparkContext: SparkContext = SparkSessionUtils.active.sparkContext
   private val backendHeartbeatThread = createHeartBeatEventThread()
@@ -83,7 +83,9 @@ class H2OContext private[sparkling] (private val conf: H2OConf) extends H2OConte
   backend.startH2OCluster(conf)
   logInfo("Connecting to H2O cluster.")
   private val nodes = getAndVerifyWorkerNodes(conf)
-  additionalInits(conf, nodes)
+  if (H2OClientUtils.isH2OClientBased(conf)) {
+    H2OClientUtils.startH2OClient(this, conf, nodes)
+  }
   RestApiUtils.setTimeZone(conf, "UTC")
   // The lowest priority used by Spark is 25 (removing temp dirs). We need to perform cleaning up of H2O
   // resources before Spark does as we run as embedded application inside the Spark
